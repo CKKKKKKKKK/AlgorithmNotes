@@ -1,0 +1,229 @@
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{epsfig}
+\usepackage[right=0.8in, top=1in, bottom=1.2in, left=0.8in]{geometry}
+\usepackage{setspace}
+\usepackage[UTF8]{ctex}
+
+\spacing{1.06}
+
+\newcommand{\handout}[5]{
+  \noindent
+  \begin{center}
+  \framebox{
+    \vbox{\vspace{0.25cm}
+      \hbox to 5.78in { {SE3352:\hspace{0.12cm}Algorithm Design} \hfill #2 }
+      \vspace{0.48cm}
+      \hbox to 5.78in { {\Large \hfill #5  \hfill} }
+      \vspace{0.42cm}
+      \hbox to 5.78in { {#3 \hfill #4} }\vspace{0.25cm}
+    }
+  }
+  \end{center}
+  \vspace*{4mm}
+}
+\newcommand{\lecture}[4]{\handout{#1}{#2}{#3}{Scribes:\hspace{0.08cm}#4}{Notes #1}}
+\newtheorem{theorem}{定理}
+\newtheorem{corollary}[theorem]{推论}
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{observation}[theorem]{观察}
+\newtheorem{example}[theorem]{例子}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem{property}[theorem]{性质}
+\newtheorem{claim}[theorem]{断言}
+\newtheorem{fact}[theorem]{事实}
+\newtheorem{assumption}[theorem]{假设}
+\newcommand{\E}{\textbf{E}}
+\newcommand{\var}{\text{var}}
+\def\eps{\ensuremath\epsilon}
+\begin{document}
+
+\lecture{1 -- Median trick}{May 14, 2020}{Instructor:\hspace{0.08cm}\emph{Guoqiang Li}}{\emph{Yifan Zhou}}
+
+
+\section{简单单位容量网络}
+
+\begin{definition}
+当一个网络满足以下条件时，它被称作为简单单位容量网络：
+\begin{itemize}
+  \item 每一条边的容量为1。
+  \item 每一个点（除了点$s$和点$t$）恰好有一条入边、或者是恰好有一条出边、或者是恰好有一条入边和一条出边(如图~\ref{fig:simple_unit_capacity}所示)。
+\end{itemize}
+\end{definition}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/simple_unit_capacity.png}
+  \caption{简单单位容量网络中三种情况的点}
+  \label{fig:simple_unit_capacity}
+\end{figure}
+
+同样地，我们有以下的性质：
+
+\begin{property}
+假设$G$是一个简单单位容量网络，$f$是一个0-1网络流，那么对应的残差网络$G_f$同样是一个简单单位容量网络。
+\end{property}
+  
+这个性质是显而易见的，不需要证明。
+
+\subsection{简单单位容量网络中的最大流}
+
+为了计算简单单位容量网络中的最大流量，我们可以使用Dinitz算法。
+
+\begin{theorem}[Even-Tarjan 1975] \label{dinitz in simple unit-capacity networks}
+在简单单位容量网络中，Dinitz算法可以在$O(|E||V|^{1/2})$的时间内计算出最大网络流。
+\end{theorem}
+
+在这里我们先复习一下Dinitz算法。普通增广的阶段为：
+\begin{itemize}
+  \item 根据原图$G$构造层级图$L_G$。
+  \item 从点$s$出发不断前进，直到到达点$t$或者无法再前进。
+  \item 如果到达了点$t$，就增加当前的流，对应地更新图$L_G$并且重新从点$s$出发。
+  \item 如果无法再前进，就在$L_G$中删除当前的点并且回退到上一个点。
+\end{itemize}
+
+为了证明这个定理，我们首先要证明三个引理：
+\begin{itemize}
+  \item \textbf{引理1} 普通增广的每一个阶段花费$O(|E|)$的时间。
+  \item \textbf{引理2} 在经过了$|V|^{1/2}$个阶段之后，$val(f) \ge val(f^*)-|V|^{1/2}$。其中$val(f)$是当前网络流的大小，而$val(f^*)$是最大网络流的大小。
+  \item \textbf{引理3} 经过至多$|V|^{1/2}$个额外的阶段之后，网络流达到最大。
+\end{itemize}
+
+\begin{proof}
+首先我们证明\textbf{引理1}：
+\begin{itemize}
+  \item 我们使用BFS算法来构造层级图。BFS算法的时间复杂度为$O(|E|+|V|)$。我们假设$|E| >> |V|$，所以构造层级图的时间复杂度为$O(|E|)$。
+  \item 在一个简单单位容量网络中，在每一个阶段中每一条边只会经历一次前进、后退和增广操作。所以每一条边的操作的时间复杂度为$O(1)$，所有边的操作的时间复杂度为$O(|E|)$。
+  \item 在一个简单单位容量网络中，在每一个阶段中每一个点只会经历一次删除操作。所以每一个点的操作的时间复杂度为$O(1)$，所有点的操作的时间复杂度为$O(|V|)$。
+  \item 综上所述，普通增广的每一个阶段花费$O(|E|)$的时间。
+\end{itemize}
+接下来我们证明\textbf{引理2}：
+\begin{itemize}
+  \item 在经过了$|V|^{1/2}$个阶段之后，最短的增广路径的长度长于$|V|^{1/2}$，所以层级图至少有$|V|^{1/2}$层。（不包括点$s$和$t$）。
+  \item 在层级图中存在一层$h$，它的点的数量$|V_h| \le |V|^{1/2}$，正如图~\ref{fig:level_h_in_level_graph}所示。不然的话层级图的点的总数大于$|V|$。
+  \item 令集合$A=\{v:l(v)<h\} \cup \{v:l(v)=h\ and\ v\ has\ \le 1\ outgoing\ residual\ edge\}$。
+  \item 所以$cap_f(A,B)\le |V_h|\le |V|^{1/2}$，并且我们可以得到$val(f^*) \le val(f) + cap_f(A,B) \Rightarrow val(f^*) \le val(f) + |V|^{1/2} \Rightarrow val(f) \ge val(f^*)-|V|^{1/2}$。
+\end{itemize}
+最后我们证明\textbf{引理3}：
+\begin{itemize}
+  \item 根据\textbf{引理2}，在经过$|V|^{1/2}$个阶段之后，当前的网络流的值加上$|V|^{1/2}$不小于最大的网络流的值。
+  \item 在一个简单单位容量网络中，每一次增广至少将网络流的值增加1.
+  \item 所以在至多$|V|^{1/2}$次额外的增广之后，网络流达到最大值。
+\end{itemize}
+通过证明这三个引理，我们可以证明定理\ref{dinitz in simple unit-capacity networks}，即在简单单位容量网络中，Dinitz算法可以在$O(|E||V|^{1/2})$的时间内计算出最大网络流。
+\end{proof}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/level_h_in_level_graph.png}
+  \caption{层级图的第h层}
+  \label{fig:level_h_in_level_graph}
+\end{figure}
+
+\subsection{使用Dinitz算法计算最大基数二分匹配}
+
+我们同样可以使用Dinitz算法计算最大基数二分匹配：
+
+\begin{corollary}
+Dinitz算法计算最大基数二分匹配的时间复杂度为$O(|E||V|^{1/2})$。
+\end{corollary}
+
+\begin{proof}
+  \ 
+  \begin{itemize}
+    \item 根据定理，我们可以通过构造最大流问题来解决二分匹配问题。
+    \item 如果我们将$L$和$R$之间的边设置为单位容量，那么产生的有向图是一个简单单位容量网络，如图~\ref{fig:unit_capacity_bipartite}所示。
+    \item 根据定理\ref{dinitz in simple unit-capacity networks}，我们可以在$O(|E||V|^{1/2})$的时间内使用Dinitz算法计算最大基数二分匹配。
+  \end{itemize}
+\end{proof}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/unit_capacity_bipartite.png}
+  \caption{根据二分图产生的简单单位容量网络}
+  \label{fig:unit_capacity_bipartite}
+\end{figure}
+
+\section{边不相交路径}
+
+\begin{definition}[边不相交路径]
+如果两条路径没有共同边，那么它们为边不相交路径。
+\end{definition}
+
+\subsection{边不相交路径问题}
+
+\textbf{边不相交路径问题}是指在一个给定的有向图$G=(V,E)$和两个点$s$和$t$，找到不相交$s \leadsto t$路径的最大个数。
+
+我们可以通过为$G$的每一条边赋单位容量来构造最大流问题，从而解决边不相交路径问题。我们将新构造的图称为$G'$。
+
+\begin{theorem} \label{edge-disjoint paths and max flow}
+在$G$中有$k$条边不相交路径和在$G'$中有值为$k$的网络流是等价的。
+\end{theorem}
+
+\begin{proof}
+$\rightarrow$:
+\begin{itemize}
+  \item 令$P_1,...,P_k$是$G$中的$k$条边不相交$s \leadsto t$路径。
+  \item 我们可以令$f(e)= \begin{cases} 1,\ edge\ e\ participates\ in\ some\ path\ P_j\\  0,\ otherwise\\ \end{cases}$
+  \item 因为这些路径是边不相交的，$f$是一个值为$k$的网络流。
+\end{itemize}
+$\leftarrow$:
+\begin{itemize}
+  \item 令$f$是$G'$中的一个整数网络流，并且大小为$k$。
+  \item 我们可以考虑边$(s,u)$，并且$f(s,u)=1$。
+  \begin{itemize}
+    \item 根据流量守恒，存在一条边$(u,v)$并且$f(u,v)=1$。
+    \item 我们可以不断在路径上加入新边，直到到达点$t$。
+  \end{itemize}
+  \item 通过重复$k$次，我们可以得到$k$条边不相交$s \leadsto t$路径。
+\end{itemize}
+综上所述，在$G$中有$k$条边不相交$s \leadsto t$路径和在$G'$中有值为$k$的网络流是等价的。
+\end{proof}
+  
+在证明了定理~\ref{edge-disjoint paths and max flow}，我们可以得到一个推论：
+
+\begin{corollary} \label{edge-disjoint paths solution corollary}
+我们可以通过构造最大流问题来求解边不相交路径问题。
+\end{corollary}
+
+\begin{proof}
+  \ 
+\begin{itemize}
+  \item 根据整数定理，在$G'$中存在一个整数最大流$f*$。
+  \item 根据之前证明的等价性，我们可以知道$f*$对应于$G$中边不相交$s \leadsto t$路径的最大个数，
+  \item 所以我们可以使用构造最大流问题来求解边不相交路径问题。
+\end{itemize}
+\end{proof}
+
+\subsection{网络连通性}
+
+\begin{definition}[断开]
+有一个边的集合$F \subseteq E$，如果每一条$s \leadsto t$路径使用了$F$中至少一条边，那么移去集合$F$将会使得点$t$被从点$s$断开。
+\end{definition}
+
+\textbf{网络连通性问题}是指给定有向图$G=(V,E)$以及点$s$和点$t$，寻找到最少的边的数目使得移去这些边会把点$t$从点$s$断开。根据Menger定理，我们可以将网络连通性问题归约到边不相交路径问题：
+
+\begin{theorem}[Menger 1927]
+边不相交$s \leadsto t$路径的最大数目等于被移去之后会将点$t$从点$s$断开的边的最小数目。
+\end{theorem}
+    
+\begin{proof}
+首先我们证明边不相交$s \leadsto t$路径的最大数目不大于被移去之后会将点$t$从点$s$断开的边的最小数目：
+\begin{itemize}
+  \item 我们可以假设集合$F \subseteq E$中的边被移去之后将点$t$从点$s$断开，并且$|F| = k$。
+  \item 每一条$s \leadsto t$路径使用了至少一条来自$F$的边，不然的话$F$中的边被移去之后不会将点$t$从点$s$断开。
+  \item 所以，边不相交$s \leadsto t$路径的数目不会大于$k$。
+\end{itemize}
+其次我们证明边不相交$s \leadsto t$路径的最大数目不小于被移去之后会将点$t$从点$s$断开的边的最小数目：
+\begin{itemize}
+  \item 假设边不相交$s \leadsto t$路径的最大数目是$k$，并且$F$是从点集$A$到点集$B$的边的集合。
+  \item 根据之前所证明的定理\ref{edge-disjoint paths and max flow}，最大流的值为$k$。
+  \item 根据最大流最小割定理, 存在一个容量为$k$的割集$(A, B)$。
+  \item 所以$|F|=k$并且$|F|$中的边被移去之后将点$t$从点$s$断开。
+  \item 所以边不相交$s \leadsto t$路径的最大数目不小于被移去之后会将点$t$从点$s$断开的边的最小数目。
+\end{itemize}
+综上所述，边不相交$s \leadsto t$路径的最大数目等于被移去之后会将点$t$从点$s$断开的边的最小数目。
+\end{proof}
+    
+\end{document}
