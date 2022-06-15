@@ -41,406 +41,188 @@
 \lecture{1 -- Median trick}{May 14, 2020}{Instructor:\hspace{0.08cm}\emph{Guoqiang Li}}{\emph{Yifan Zhou}}
 
 
-\section{Course Content}
-
-% Today's lecture has three main topics that we'll go through, i.e. Median Trick (from previous lecture), Distinct element count and Impossibility Results.
-
-\subsection{Simple Unit-Capacity Networks}
+\section{Simple Unit-Capacity Networks}
 
 \begin{definition}
 A flow network is a simple unit-capacity network if:
 \begin{itemize}
   \item Every edge has capacity 1.
-  \item Every node (other than s or t) has exactly one entering edge, or exactly one leaving edge, or both.
+  \item Every node (other than s or t) has exactly one entering edge, or exactly one leaving edge, or both (as depicted in figure~\ref{fig:simple_unit_capacity}).
 \end{itemize}
 \end{definition}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/simple_unit_capacity.png}
+  \caption{Three cases of nodes in a simple unit-capacity network}
+  \label{fig:simple_unit_capacity}
+\end{figure}
+
+Also we have the following property:
+
 \begin{property}
-Let $G$ be a simple unit-capacity network and let $f$ be a 0–1 flow. Then, residual network $G_f$ is also a simple unit-capacity network.
+Let $G$ be a simple unit-capacity network and let $f$ be a 0-1 flow. Then, residual network $G_f$ is also a simple unit-capacity network.
 \end{property}
 
-\subsection{Dinitz' Algorithm in Simple Unit-Capacity Networks}
+This property is very obvious.
+
+\subsection{Maximum Flow in Simple Unit-Capacity Networks}
 
 To compute a maximum flow in simple unit-capacity networks, we can use Dinitz' algorithm.
 
-\begin{theorem}
-[Even-Tarjan 1975]
-In simple unit-capacity networks, Dinitz’algorithm computes a maximum flow
-in $O(|E||V|^{1/2})$ time.
+\begin{theorem}[Even-Tarjan 1975] \label{dinitz in simple unit-capacity networks}
+In simple unit-capacity networks, Dinitz’algorithm computes a maximum flow in $O(|E||V|^{1/2})$ time.
 \end{theorem}
+
+Here we review the Dinitz' algorithm first. Phase of normal augmentations is:
+\begin{itemize}
+  \item Construct level graph $L_G$ according to the graph $G$.
+  \item Start at $s$ and advance along an edge in $L_G$ until reach at $t$ or get stuck.
+  \item If reach $t$, augment the flow, update $L_G$ and restart from $s$.
+  \item If get stuck, then delete current node from $L_G$ and retreat to previous node.
+\end{itemize}
 
 To prove this theorem, we have to prove three lemmas first:
 \begin{itemize}
   \item Lemma 1. Each phase of normal augmentations takes $O(|E|)$ time.
-  \item Lemma 2. After $|V|^{1/2}$ phases, $val(f)\ge val(f^*)-|V|^{1/2}$
-  \item Lemma 3. After $\le |V|^{1/2}$ additional augmentations, flow is optimal.
+  \item Lemma 2. After $|V|^{1/2}$ phases, $val(f)\ge val(f^*)-|V|^{1/2}$. $val(f)$ is the value of current flow, and $val(f^*)$ is the value of the optimal flow.
+  \item Lemma 3. After at most $|V|^{1/2}$ additional augmentations, the flow is optimal.
 \end{itemize}
 
 \begin{proof}
 First we can prove lemma 1:
 \begin{itemize}
-  \item We run BFS algorithm to create the level graph. BFS takes O(|E| + |V|) time. Because we suppose that |E| >> |V|, it takes O(|E|) time to create level graph.
-  \item In a simple unit-capacity network, each edge will be involved in at most one advance, retreat and augmentation operation per phase. So each edge takes O(1) time, totally O(|E|) time.
-  \item In a simple unit-capacity network, each node will be involved in at most one retreat operation per phase. So each node takes O(1) time, totally O(|V|) time.
-  \item In conclusion, each phase of normal augmentations takes O(|E|) time.
+  \item We run BFS algorithm to create the level graph. BFS takes $O(|E| + |V|)$ time. Because we suppose that $|E| >> |V|$, it takes $O(|E|)$ time to create level graph.
+  \item In a simple unit-capacity network, each edge will be involved in at most one advance, retreat and augmentation operation per phase. So each edge takes $O(1)$ time, totally $O(|E|)$ time.
+  \item In a simple unit-capacity network, each node will be involved in at most one retreat operation per phase. So each node takes $O(1)$ time, totally $O(|V|)$ time.
+  \item In conclusion, each phase of normal augmentations takes $O(|E|)$ time.
 \end{itemize}
-
-Then we will prove lemma 2:
+Then we prove lemma 2:
 \begin{itemize}
-  \item After $|V|^{1/2}$ phases, the length of shortest augmentation path is $>|V|^{1/2}$, so the level graph has $\ge |V|^{1/2}$levels (not including s or t).
-  \item Then there exists a level h, with number of nodes $|V_h| \le |V|^{1/2}$.
+  \item After $|V|^{1/2}$ phases, the length of shortest augmentation path is greater than $|V|^{1/2}$, so the level graph has at least $|V|^{1/2}$levels (not including $s$ and $t$).
+  \item Then there exists a level $h$, with number of nodes $|V_h| \le |V|^{1/2}$, as depicted in figure~\ref{fig:level_h_in_level_graph}. Otherwise the total number of nodes is greater than $|V|$.
   \item Let set $A=\{v:l(v)<h\} \cup \{v:l(v)=h\ and\ v\ has\ \le 1\ outgoing\ residual\ edge\}$.
   \item Then $cap_f(A,B)\le |V_h|\le |V|^{1/2}$, and we can get that $val(f^*) \le val(f) + cap_f(A,B) \Rightarrow val(f^*) \le val(f) + |V|^{1/2} \Rightarrow val(f) \ge val(f^*)-|V|^{1/2}$.
 \end{itemize}
-
-Finally, we will prove lemma 3:
+Finally, we prove lemma 3:
 \begin{itemize}
-  \item According to lemma, after $|V|^{1/2}$ phases, value of current flow plus $|V|^{1/2}$ is greater than value of the optimal flow.
+  \item According to lemma 2, after $|V|^{1/2}$ phases, value of current flow plus $|V|^{1/2}$ is no less than value of the optimal flow.
   \item In a simple unit-capacity network, each augmentation increases flow value by at least 1.
-  \item So after  $\le |V|^{1/2}$ additional augmentations, the flow is optimal.
+  \item So after at most $|V|^{1/2}$ additional augmentations, the flow is optimal.
 \end{itemize}
-
+By proving the three lemmas, we can prove the theorem \ref{dinitz in simple unit-capacity networks} that in simple unit-capacity networks, Dinitz' algorithm computes a maximum flow in $O(|E||V|^{1/2})$ time. 
 \end{proof}
 
-By proving the three lemmas, we can prove the theorem that In simple unit-capacity networks, Dinitz’algorithm computes a maximum flow
-in $O(|E||V|^{1/2})$ time. And also we can get a corollary:
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/level_h_in_level_graph.png}
+  \caption{Level h in the level graph}
+  \label{fig:level_h_in_level_graph}
+\end{figure}
+
+\subsection{Compute Maximum-Cardinality Bipartite Matching by Dinitz' Algorithm}
+
+Also we can use Dinitz' algorithm to compute maximum-cardinality bipartite matching:
 
 \begin{corollary}
-Dinitz’ algorithm computes maximum-cardinality bipartite matching in $O(|E||V|^{1/2})$ time.
+Dinitz' algorithm computes maximum-cardinality bipartite matching in $O(|E||V|^{1/2})$ time.
 \end{corollary}
 
 \begin{proof}
 \ 
 \begin{itemize}
   \item According to corollary before, we can solve bipartite matching problem via max-flow formulation.
-  \item If we assign unit capacity to edges between L and R, then the generated digraph is a simple unit-capacity network.
-  \item According to theorem above, we can use Dinitz’ algorithm computes maximum-cardinality bipartite matching in $O(|E||V|^{1/2})$ time.
+  \item If we assign unit capacity to edges between $L$ and $R$, then the generated digraph is a simple unit-capacity network as depicted in figure~\ref{fig:unit_capacity_bipartite}.
+  \item According to theorem \ref{dinitz in simple unit-capacity networks}, we can use Dinitz' algorithm to compute maximum-cardinality bipartite matching in $O(|E||V|^{1/2})$ time.
 \end{itemize}
-
 \end{proof}
 
-\subsection{Edge-Disjoint Paths}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/unit_capacity_bipartite.png}
+  \caption{Generated simple unit-capacity network of bipartite}
+  \label{fig:unit_capacity_bipartite}
+\end{figure}
 
-\begin{definition}
-[Edge-Disjoint]
+\section{Edge-Disjoint Paths}
+
+\begin{definition}[Edge-Disjoint Paths]
 Two paths are edge-disjoint if they have no edge in common.
 \end{definition}
 
-\begin{definition}
-[Edge-disjoint Paths Problem]
-Given a digraph $G=(V, E)$ and two nodes $s$ and $t$, find the max number of edge-disjoint $s \rightarrow t$ paths.
-\end{definition}
+\subsection{Edge-Disjoint Paths Problem}
+
+A \textbf{edge-disjoint paths problem} is to find the max number of edge-disjoint $s \leadsto t$ paths given a digraph $G=(V, E)$ and two nodes $s$ and $t$.
 
 To solve the edge-disjoint paths problem, we can use max-flow formulation by assigning unit capacity to every edge of $G$, and calling the new graph $G'$.
 
-\begin{theorem}
-There is 1-1 correspondence between $k$ edge-disjoint $s \rightarrow t$ paths in G and integral flows of value k in G'.
+\begin{theorem} \label{edge-disjoint paths and max flow}
+There is 1-1 correspondence between $k$ edge-disjoint $s \leadsto t$ paths in $G$ and integral flows of value $k$ in $G'$.
 \end{theorem}
 
 \begin{proof}
 $\rightarrow$:
 \begin{itemize}
-  \item Let $P_1,...,P_k$ be $k$ edge-disjoint $s \rightarrow t$ paths in G.
+  \item Let $P_1,...,P_k$ be $k$ edge-disjoint $s \leadsto t$ paths in G.
   \item We can set $f(e)= \begin{cases} 1,\ edge\ e\ participates\ in\ some\ path\ P_j\\  0,\ otherwise\\ \end{cases}$
-  \item Since paths are edge-disjoint, $f$ is a flow of value $k$
+  \item Since paths are edge-disjoint, $f$ is a flow of value $k$.
 \end{itemize}
-
 $\leftarrow$:
 \begin{itemize}
   \item Let $f$ be an integral flow in $G'$ of value $k$.
   \item We can consider edge $(s,u)$ with $f(s,u)=1$.
   \begin{itemize}
     \item By flow conservation, there exists an edge $(u,v)$ with $f(u,v)=1$.
-    \item We can continue this process until reach t by always choosing a new edge.
+    \item We can continue this process until reach $t$ by always choosing a new edge.
   \end{itemize}
-  \item By repeating $k$ times, we can produce $k$ edge-disjoint $s \rightarrow t$ paths.
+  \item By repeating $k$ times, we can produce $k$ edge-disjoint $s \leadsto t$ paths.
 \end{itemize}
-
+In conclusion, there is 1-1 correspondence between $k$ edge-disjoint $s \leadsto t$ paths in G and integral flows of value k in G'.
 \end{proof}
 
-After prove the theorem, we can get a corollary:
+After prove theorem~\ref{edge-disjoint paths and max flow}, we can get a corollary:
 
-\begin{corollary}
+\begin{corollary} \label{edge-disjoint paths solution corollary}
 We can solve edge-disjoint paths problem via max-flow formulation.
 \end{corollary}
 
 \begin{proof}
 \ 
 \begin{itemize}
-  \item Integrality theorem $\Rightarrow$ there exists a max flow $f*$ in $G'$ that is integral
-  \item 1-1 correspondence $\Rightarrow$ $f*$ corresponds to max number of edge-disjoint $s \rightarrow t$ paths in $G$
+  \item According to the integrality theorem, there exists a max flow $f*$ in $G'$ that is integral.
+  \item From the 1-1 correspondence proved above, we can know that $f*$ corresponds to max number of edge-disjoint $s \leadsto t$ paths in $G$.
+  \item So we can solve edge-disjoint paths problem via max-flow formulation.
 \end{itemize}
-
 \end{proof}
 
 \subsection{Network Connectivity}
 
-\begin{definition}
-[Disconnect]
-A set of edges $F \subseteq E$ disconnects $t$ from $s$ if every $s \rightarrow t$ path uses at least one edge in $F$
+\begin{definition}[Disconnect]
+A set of edges $F \subseteq E$ disconnects $t$ from $s$ if every $s \leadsto t$ path uses at least one edge in $F$.
 \end{definition}
 
-\begin{definition}
-[Network Connectivity Problem]
-Given a digraph $G=(V,E)$ and two nodes $s$ and $t$, find minimal number of edges whose removal disconnects $t$ from $s$
-\end{definition}
+A \textbf{network connectivity problem} is to find the minimal number of edges whose removal disconnects $t$ from $s$ given a digraph $G=(V,E)$ and two nodes $s$ and $t$. According to Menger's theorem, we can reduce the network connectivity problem to a edge-disjoint paths problem:
 
-\begin{theorem}
-[Menger 1927]
-The max number of edge-disjoint $s \rightarrow t$ paths equals the min number of edges whose removal disconnects $t$ from $s$
+\begin{theorem}[Menger 1927]
+The max number of edge-disjoint $s \leadsto t$ paths equals the mininal number of edges whose removal disconnects $t$ from $s$.
 \end{theorem}
 
 \begin{proof}
-First we prove that the max number of edge-disjoint $s \rightarrow t$ paths is no greater than the min number of edges whose removal disconnects $t$ from $s$:
+First we prove that the max number of edge-disjoint $s \leadsto t$ paths is no greater than the min number of edges whose removal disconnects $t$ from $s$:
 \begin{itemize}
   \item We can suppose that the removal of $F \subseteq E$ disconnects $t$ from $s$, and $|F| = k$.
-  \item Every $s \rightarrow t$ path uses at least one edge in $F$.
-  \item Hence, the number of edge-disjoint path is $\le k$.
+  \item Every $s \leadsto t$ path uses at least one edge in $F$, otherwise the removal of $F$ does not disconnect $t$ from $s$.
+  \item Hence, the number of edge-disjoint path is no greater than $k$.
 \end{itemize}
-
-Second we prove that the max number of edge-disjoint $s \rightarrow t$ paths is no less than the min number of edges whose removal disconnects $t$ from $s$:
+Second we prove that the max number of edge-disjoint $s \leadsto t$ paths is no less than the min number of edges whose removal disconnects $t$ from $s$:
 \begin{itemize}
-  \item Suppose max number of edge-disjoint $s \rightarrow t$ paths is $k$.
-  \item According to the theorem above, the value of max flow is $k$.
+  \item Suppose max number of edge-disjoint $s \leadsto t$ paths is $k$ and let $F$ be the set of edges from set of nodes $A$ to set of nodes $B$.
+  \item According to the theorem \ref{edge-disjoint paths and max flow} proved before, the value of max flow is $k$.
   \item According to the max-flow min-cut theorem, there exists a cut $(A, B)$ of capacity $k$.
-  \item Let $F$ be the set of edges from $A$ to $B$.
   \item Then $|F| = k$ and disconnects $t$ from $s$.
 \end{itemize}
+In conclusion, the max number of edge-disjoint $s \leadsto t$ paths equals the mininal number of edges whose removal disconnects $t$ from $s$.
 \end{proof}
-
-\section{Extended Content}
-% So far, we have an algorithm $A$ which estimates in correct range of $\eps$ with probability $\ge 0.9$. Our new algorithm $A^{\ast}$ will output in range of $\eps$ with probability $1-\delta$.
-% Algorithm:
-% \begin{itemize}
-% \item Repeat $A$ for $m=O(log (1/\delta))$ times
-% \item Take median of all the $m$ answers.
-% \end{itemize}
-
-% To prove the correctness, we'll use Chernoff/Hoeffding bounds.
-
-% \begin{definition}
-% [Chernoff/Hoeffding Bound]
-% Let $X_{1}$, $X_{2}$, $\ldots$, $X_{m}$ be independent random variables $\in \{0,1\}$,
-% $\mu = E[\Sigma_{i} X_{i}], \eps \in [0,1]$.
-% Then $Pr[|\Sigma_{i} X_{i}-\mu| > \eps\mu] \leq 2e^{-\eps^{2}\mu/3}$
-% \end{definition}
-
-% Define $X_{i} = 1$ iff the $i^{th}$ answer of $A$ is correct (i.e. estimated value of $A$ lies in correct range).
-
-% \begin{claim}
-% $E[X_{i}] = 0.9$, and $E[\mu] = 0.9m$
-% \end{claim}
-
-% \begin{proof}
-% \ 
-% Since A is correct with probability 0.9, $E[X_{i}] = 0.9$. And $E[\mu] = 0.9m$ due to linearity of expectation.
-% \end{proof}
-
-% \begin{claim}
-% New algorithm $A^{\ast}$ is correct when $\Sigma_{i} X_{i} > 0.5m$
-% \end{claim}
-
-% \begin{proof}
-% \ 
-% Since we are considering median value to be our answer, if more than half the trials of A are correct, algorithm $A^{\ast}$ is also correct.
-% \end{proof}
-
-% \begin{claim}
-% To prove, $Pr[\Sigma_{i} X_{i} \ge 0.5m] \ge 1-\delta$ or $Pr[\Sigma_{i} X_{i} < 0.5m] < \delta$
-% \end{claim}
-
-% \begin{proof}
-% \begin{equation}
-% \begin{split}
-% Pr[\Sigma_{i} X_{i} < 0.5m] & = Pr[\Sigma_{i} X_{i} - 0.9m < -0.4m]\\
-% & \le Pr[|\Sigma_{i} X_{i} - \mu| > 0.4m]\\
-% & = Pr[|\Sigma X_{i} - \mu| > 0.4/0.9 \mu]
-% \end{split}
-% \end{equation}
-% Using Chernoff bound,
-% \begin{equation}
-% \begin{split}
-% & \leq e^{-c*0.9m}\\
-% & < \delta
-% \end{split}
-% \end{equation}
-% Above equation holds for $m = O(log(1/\delta))$
-% \end{proof}
-
-% \section{Application of Algorithms}
-% Given, a stream of size $m$ containing numbers from $[n]$, we have to approximate the number of elements with non-zero frequency. To calculate the exact value the space required:
-
-% \begin{itemize}
-% \item $O(n)$ bits. (maintain a vector of length n).
-% \item $O(m \log (n))$ bits. (save m numbers, each taking $log(n)$ bits).
-% \end{itemize}
-
-% Since, this complexity is not feasible as $m$,$n$ can be very large, we'll look at algorithm for approximating the distinct count value.
-
-% \subsubsection{Hash Function}
-% \begin{itemize}
-% \item $h : [n] \rightarrow [0,1]$
-% \item $h(i)$ is uniformly distributed in $[0,1]$.
-% \end{itemize}
-
-% \subsection{Algorithm [Flajolet-Martin 1985]}
-% We maintain a variable $z$.
-% \begin{enumerate}
-% \item Initialize $z = 1$.
-% \item Whenever $i$ is encountered: $z = \min{(z,h(i))}$
-% \item When done, output $1/z -1$.
-% \end{enumerate}
-
-% Now, we'll prove the algorithm works in a similar fashion followed in previous lecture.
-% Let $d$ be number of distinct elements.
-
-% \begin{claim}
-% $E[z] = d+1$
-% \end{claim}
-
-% \begin{proof}
-% $z$ is the minimum of $d$ random numbers in $[0,1]$. Pick another random number $a \in [0,1]$. The probability $a<z$:
-% \begin{enumerate}
-% \item exactly z
-% \item probability it's smallest among $d+1$ reals : $1/(d+1)$
-% \end{enumerate}
-% Equating these two, one can prove the claim.
-% \end{proof}
-
-% \begin{claim}
-% $\text{var}[z] \leq 2/d^{2}$
-% \end{claim}
-
-% \begin{proof}
-% It can be done in a similar fashion described in previous lecture.
-% \end{proof}
-
-% \subsubsection{$(1+\eps)$ approximation Algorithm }
-% We can take $Z = (z_{1} + z_{2} + ... z_{k})/k$ for independent $z_{1}, ... z_{k}$
-
-% \subsection{Alternate Algorithm: Bottom-k}
-% Instead of just use the minimum value of hash function for $i$ inputs, we'll maintain the $k$ smallest hashes seen.
-% \begin{enumerate}
-% \item Initialize $(z_{1}, z_{2},...z_{k}) = 1$.
-% \item Keep $k$ smallest hashes seen, s.t. $z_{1}\leq z_{2}\leq...z_{k}$
-% \item When done, output $\hat{d} = k/z_{k}$
-% \end{enumerate}
-
-% \begin{claim}
-% The following claims are stated:
-% \begin{itemize}
-% \item $Pr[\hat{d} > (1 + \eps)d] \leq 0.05$
-% \item $Pr[\hat{d} < (1 - \eps)d] \leq 0.05$
-% \item Overall probability that $\hat{d}$ outside range is at most 0.1
-% \end{itemize}
-% \end{claim}
-
-% \begin{proof}
-% To compute $Pr[\hat{d} > (1+\eps)d]$:
-% \begin{itemize}
-% \item Define $X_{i} = 1$ iff $h(i) < \dfrac{k}{(1+\eps)d}$
-% \item Then $\hat{d} > (1+\eps)d$ iff $\Sigma_{i} X_{i} > k$
-% \item if $\Sigma_{i} X_{i} > k$\\
-%   $\iff \exists$ at least $k$ numbers for which $h(i) < \dfrac{k}{(1+\eps)d}$\\
-%     \begin{equation}
-%       \iff z_{k} < \dfrac{k}{(1+\eps)d}
-%       \iff \dfrac{k}{z_{k}} > (1+\eps)d
-%       \iff \hat{d} > (1+\eps)d
-%     \end{equation}
-% \item
-%   $E[X_{i}] = \dfrac{k}{(1+\eps)d}$\\
-%   $E[\Sigma_{i} X_{i}] = d E[X_{i}] = \dfrac{k}{1 + \eps}$\\
-%   $\text{var}[\Sigma_{i} X_{i}] = d \text{var}[X_{i}] \leq dE[X_{1}^{2}] \leq  \dfrac{k}{1+\eps} \leq k$\\
-%   (Since $X_{1} \in \{0,1\}$, $E[X_{1}^{2}] = E[X_{i}]$)
-% \item By Chebyshev:
-%     $Pr[|\Sigma X_{i} - \dfrac{k}{1+\eps}| > \sqrt{20k}] \leq 0.05 \implies Pr[\Sigma X_{i} > \dfrac{k}{1+\eps} + \sqrt{20k}] \leq 0.05 $\\
-%     \begin{itemize}
-%     \item
-%       (For $\eps < 1/2$ and $k=c/\eps^{2}$)\\
-%       $\dfrac{k}{1+\eps} + \sqrt{20k} \leq k(1-\eps+\eps^{2}) + \sqrt{20k}$ (Taylor Series Expansion)\\
-%       $ \leq k - k\eps/2 + 5\sqrt{c}/\eps$
-%       $ = k - c / 2\eps + 5\sqrt{c}/\eps$\\
-%       $ < k $ where $c > 100$
-%     \item
-%       Since $k > \dfrac{k}{1+\eps} + \sqrt{20k} $ in our case and $\Sigma X_{i}$ is monotonically increasing, $Pr[\Sigma X_{i} > k] \leq Pr[\Sigma X_{i} > \dfrac{k}{1+\eps} + \sqrt{20k}] \leq 0.05$
-
-%     \end{itemize}
-% \end{itemize}
-% \end{proof}
-
-% \subsection{Hash functions in stream}
-% The hash function we used has two practical issues: (1) the return value should be a real number. (2) how do we store it?
-
-% Discretization can solve the first issue. Instead of all the real numbers in $[0, 1]$, we use hash function with range $\{0, \frac{1}{M}, \frac{2}{M}, \frac{3}{M}, \ldots, 1\}$. For large $M \gg n^{3}$, the probability that $d \le n$ random numbers collide is at most $\frac{1}{n}$.
-
-% For the second issue, we use pairwise independent function instead of independent function.
-
-% \begin{definition}
-% $h: [n] \rightarrow \{1, 2, \ldots M\}$ is pairwise independent if for all $i \ne j$ and $a, b \in [M]$, $\text{Pr}[h(i)=a \land h(j)=b]=\frac{1}{M^2}$
-% \end{definition}
-
-% It works because in previous calculation, we only care about pairs. We defined $X_i=1$ iff $h(i)$ is small than a threshold, then we computed $\text{var}[\Sigma X_i] = E[(\Sigma X_i)^2] - E[(\Sigma X_i)^2] = E[X_1X_1 + X_1X_2 + \ldots]- E[(\Sigma X_i)^2]$. Notice that $E[X_iX_j]$ is the same for fully random $h$ and pairwise independent $h$.
-
-% \begin{example}
-% [Construct a pairwise independent hash]
-% Assume $M$ is a prime number (if not, we can always pick a larger $M$ that is a prime number). We pick $p, q \in \{0, 1, 2, \ldots M-1 \}$ and the hash function $h(i) = pi+q \mod M$. In this construction we only need $O(\log M) = O(\log n)$ space (to store $p, q, M$).
-% \end{example}
-
-% \begin{proof}
-% $h(i)=a, h(j)=b$ is equivalent to $pi+q \equiv a, pj+q \equiv b$. So $p(i-j) \equiv a-b$ and $p \equiv (a-b)(i-j)^{-1}, q \equiv a - pi$. Since $M$ is a prime number, the unique inverse implies that there is only one pair $(p, q)$ satisfies it. And the probability that pair is chosen is exactly $\frac{1}{M^2}$.
-% \end{proof}
-
-% \section{Impossibility Results}
-
-% We have used both approximation and randomization to solve the distinct counting problem with space much less than $\min{(m, n)}$. Now we are wondering: can we omit either approximation or randomization to achieve the same space efficiency? The answer is no.
-
-% \subsection{Deterministic Exact Won't Work}
-
-% First, we will show that there is no deterministic (no randomization) and exact (no approximation) way to solve it.
-
-% Suppose there do exists a deterministic and exact algorithm $A$ and an estimator function $R$ that use space $s \ll n, m$. That is, for a given integer stream, we first run the algorithm $A$ on the stream. As the stream goes $A$ will return middle memory steps, and we obtain the final memory state $\sigma$ after the stream ends. Then we apply $R$ on $\sigma$ to obtain our estimator $\hat{d}$. Since both $A$ and $R$ are deterministic and exact, $\hat{d}$ must equals to the distinct count for the stream.
-
-% We now build a binary representation $x$ of the stream with the following rules: (1) $x \in \{0, 1\}^{n}$, (2) $i$ in stream iff $x_i = 1$. For example, if 1, 3, 5, 6, 7 are in the stream and 2, 4 are not, $x$ will start with 1, 0, 1, 0, 1, 1, 1. Notice that each stream has a corresponding representation and streams containing different numbers have different representations.
-
-% \begin{claim}
-% We can recover the $x$ of the stream given the memory state $\sigma$
-% \end{claim}
-
-% \begin{proof}
-% Denote $d=R(\sigma)$ be the original estimator. Now we treat $\sigma$ as a middle snapshot of the memory and add integer $i$ as the next element of the stream. Now $A$ will return another memory state $\sigma'$, and $d'=R(\sigma)'$ will be our new estimator. If $d'=d$, $i$ must have appeared in the stream before since $A$ and $R$ are deterministic and exact. Similarly, if $d'>d$, $i$ must have not appeared in the stream before. Using this method with $i=1, 2, 3\ldots$ and we can recover the $x$.
-% \end{proof}
-
-% Since we can recover $x$ from $\sigma$, we can treat $\sigma$ as an encoding of a string $x$ of length $n$. But $\sigma$ has only $s \ll n$ bits! Furthermore, we can treat $A$, the function that produces $\sigma$, as a function with domain $\{0, 1\}^{n}$ and $\{0, 1\}^{s}$. We can see that $A$ must be injective because if $A(x)=A(x')=\sigma$, the recoverability implies $x=x'$.
-
-% Hence $s \ge n$. Which implies that there is no deterministic and exact algorithm $A$ and an estimator function $R$ that use space $s \ll n, m$.
-
-% \subsection{Deterministic Approx. Won't Either}
-
-% We can use the similar strategy to prove that deterministic approx. won't work. We pick $T \subset \{0, 1\}^{n}$ that satisfies the following conditions: (1) for all distinct $x, y \in T$, the number of digits $i$ that $y_i=1$ and $x_i=0$ should $\ge \frac{n}{6}$. (2) $|T| \ge 2^{\Omega(n)}$. Now we use algorithm $A$ to encode an input $x$ into $\sigma=A(x)$ and our estimator would be $\hat{d}=R(\sigma)$.
-
-% Now we want to recover $x$ based on $\sigma$, as what we have done in the last section. For a given $\sigma$ and any $y \in T$, we append $y$ to the stream and apply $A$ on it, and $A$ will return a memory state $\sigma'$. Using $\sigma'$ we have new estimator $\hat{d'}=R(\sigma')$.
-
-% \begin{claim}
-% If $\hat{d'} > 1.01 \hat{d}$, then $x \ne y$, else $x=y$.
-% \end{claim}
-
-% \begin{proof}
-% The idea is that when $x=y$, $\hat{d}$ would be really close to $\hat{d'}$ (up to $(1+\epsilon)^{2}$ because both of them are $\epsilon$-approximated) and when $x \ne y$, the construction of $T$ guarantee that $\hat{d} \ge \hat{d} + \frac{n}{6}$. So we can pick an $\epsilon$ that works for our claim.
-% \end{proof}
-
-% We can use this method to check every element $y \in T$ to see if $y=x$, and eventually we can recover $x$ from it. Similar to last section, we can show that $A$ is an injective function and it implies that $2^{s} \ge |T|$ or $s = \Omega(n)$.
-
-% \section{Concluding Remarks}
-
-% \begin{itemize}
-
-% \item We can use median trick and Chernoff bound to improve the probability of an existing algorithm.
-
-% \item For distinct elements problem, we can also store the hashes $h(i)$ approximately. One example is to store the number of leading zeros, and it only cost $O(\log \log n)$ bits per hash value, and that is the idea behind another algorithm called HyperLogLog.
-
-% \item For the impossibility results, we can also prove that randomized exact algorithm won't work.
-
-% \end{itemize}
 
 
 \end{document}
